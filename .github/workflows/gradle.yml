@@ -2,7 +2,8 @@
 name: Auto builds
 on: [ pull_request, push ]
 jobs:
-  Build:
+  build:
+    name: Commit ${{ github.sha }}
     strategy:
       matrix:
         java: [ 16 ]
