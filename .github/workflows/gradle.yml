@@ -20,5 +20,5 @@ jobs:
     - name: Upload build artifacts
       uses: actions/upload-artifact@v2.2.4
       with:
-        name: $GITHUB_REPOSITORY
+        name: ${{ github.repository }}
         path: build/libs
