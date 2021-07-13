@@ -20,5 +20,5 @@ jobs:
     - name: Upload build artifacts
       uses: actions/upload-artifact@v2.2.4
       with:
-        name: ${{ matrix.java }}
+        name: $GITHUB_REPOSITORY
         path: build/libs
