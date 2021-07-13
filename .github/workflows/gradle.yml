@@ -20,5 +20,5 @@ jobs:
     - name: Upload build artifacts
       uses: actions/upload-artifact@v2.2.4
       with:
-        name: ${{ github.event.repository.name }}
+        name: ${{ github.event.repository.name }}-${{ github.sha }}
         path: build/libs/*pre.jar
