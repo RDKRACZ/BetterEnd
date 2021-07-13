@@ -7,7 +7,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        java: [ 16 # Gradle currently does not support Java 17 https://github.com/gradle/gradle/issues/16857   17-ea ]
+        java: [ 16 ]
     runs-on: [ ubuntu-latest ]
     steps:
     - name: Checkout repository
