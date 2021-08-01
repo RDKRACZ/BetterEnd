@@ -38,7 +38,7 @@ public class LacugroveFeature extends DefaultFeature {
 		final Random random = featureConfig.random();
 		final BlockPos pos = featureConfig.origin();
 		final WorldGenLevel world = featureConfig.level();
-		if (!world.getBlockState(pos.below()).is(TagAPI.END_GROUND)) return false;
+		if (!world.getBlockState(pos.below()).is(TagAPI.BLOCK_END_GROUND)) return false;
 		
 		float size = MHelper.randRange(15, 25, random);
 		List<Vector3f> spline = SplineHelper.makeSpline(0, 0, 0, 0, size, 0, 6);
@@ -57,7 +57,7 @@ public class LacugroveFeature extends DefaultFeature {
 		
 		radius = MHelper.randRange(1.2F, 1.8F, random);
 		SDF function = SplineHelper.buildSDF(spline, radius, 0.7F, (bpos) -> {
-			return EndBlocks.LACUGROVE.bark.defaultBlockState();
+			return EndBlocks.LACUGROVE.getBark().defaultBlockState();
 		});
 		
 		function.setReplaceFunction(REPLACE);
@@ -65,7 +65,7 @@ public class LacugroveFeature extends DefaultFeature {
 		function.fillRecursive(world, pos);
 		
 		spline = spline.subList(4, 6);
-		SplineHelper.fillSpline(spline, world, EndBlocks.LACUGROVE.bark.defaultBlockState(), pos, REPLACE);
+		SplineHelper.fillSpline(spline, world, EndBlocks.LACUGROVE.getBark().defaultBlockState(), pos, REPLACE);
 		
 		MutableBlockPos mut = new MutableBlockPos();
 		int offset = random.nextInt(2);
@@ -82,7 +82,7 @@ public class LacugroveFeature extends DefaultFeature {
 					boolean generate = false;
 					for (int y = minY; y < maxY; y++) {
 						mut.setY(y);
-						if (world.getBlockState(mut).is(TagAPI.END_GROUND)) {
+						if (world.getBlockState(mut).is(TagAPI.BLOCK_END_GROUND)) {
 							generate = true;
 							break;
 						}
@@ -92,8 +92,13 @@ public class LacugroveFeature extends DefaultFeature {
 						for (int y = top; y >= minY; y--) {
 							mut.setY(y);
 							BlockState state = world.getBlockState(mut);
-							if (state.getMaterial().isReplaceable() || state.getMaterial().equals(Material.PLANT) || state.is(TagAPI.END_GROUND)) {
-								BlocksHelper.setWithoutUpdate(world, mut, y == top ? EndBlocks.LACUGROVE.bark : EndBlocks.LACUGROVE.log);
+							if (state.getMaterial().isReplaceable() || state.getMaterial()
+																			.equals(Material.PLANT) || state.is(TagAPI.BLOCK_END_GROUND)) {
+								BlocksHelper.setWithoutUpdate(
+									world,
+									mut,
+									y == top ? EndBlocks.LACUGROVE.getBark() : EndBlocks.LACUGROVE.getLog()
+								);
 							}
 							else {
 								break;
@@ -108,14 +113,17 @@ public class LacugroveFeature extends DefaultFeature {
 	}
 	
 	private void leavesBall(WorldGenLevel world, BlockPos pos, float radius, Random random, OpenSimplexNoise noise) {
-		SDF sphere = new SDFSphere().setRadius(radius).setBlock(EndBlocks.LACUGROVE_LEAVES.defaultBlockState().setValue(LeavesBlock.DISTANCE, 6));
+		SDF sphere = new SDFSphere().setRadius(radius)
+									.setBlock(EndBlocks.LACUGROVE_LEAVES.defaultBlockState()
+																		.setValue(LeavesBlock.DISTANCE, 6));
 		sphere = new SDFDisplacement().setFunction((vec) -> {
 			return (float) noise.eval(vec.x() * 0.2, vec.y() * 0.2, vec.z() * 0.2) * 3;
 		}).setSource(sphere);
 		sphere = new SDFDisplacement().setFunction((vec) -> {
 			return random.nextFloat() * 3F - 1.5F;
 		}).setSource(sphere);
-		sphere = new SDFSubtraction().setSourceA(sphere).setSourceB(new SDFTranslate().setTranslate(0, -radius - 2, 0).setSource(sphere));
+		sphere = new SDFSubtraction().setSourceA(sphere)
+									 .setSourceB(new SDFTranslate().setTranslate(0, -radius - 2, 0).setSource(sphere));
 		MutableBlockPos mut = new MutableBlockPos();
 		sphere.addPostProcess((info) -> {
 			if (random.nextInt(5) == 0) {
@@ -125,7 +133,7 @@ public class LacugroveFeature extends DefaultFeature {
 						return info.getState();
 					}
 				}
-				info.setState(EndBlocks.LACUGROVE.bark.defaultBlockState());
+				info.setState(EndBlocks.LACUGROVE.getBark().defaultBlockState());
 				for (int x = -6; x < 7; x++) {
 					int ax = Math.abs(x);
 					mut.setX(x + info.getPos().getX());
@@ -156,7 +164,11 @@ public class LacugroveFeature extends DefaultFeature {
 		if (radius > 5) {
 			int count = (int) (radius * 2.5F);
 			for (int i = 0; i < count; i++) {
-				BlockPos p = pos.offset(random.nextGaussian() * 1, random.nextGaussian() * 1, random.nextGaussian() * 1);
+				BlockPos p = pos.offset(
+					random.nextGaussian() * 1,
+					random.nextGaussian() * 1,
+					random.nextGaussian() * 1
+				);
 				boolean place = true;
 				for (Direction d : Direction.values()) {
 					BlockState state = world.getBlockState(p.relative(d));
@@ -166,17 +178,17 @@ public class LacugroveFeature extends DefaultFeature {
 					}
 				}
 				if (place) {
-					BlocksHelper.setWithoutUpdate(world, p, EndBlocks.LACUGROVE.bark);
+					BlocksHelper.setWithoutUpdate(world, p, EndBlocks.LACUGROVE.getBark());
 				}
 			}
 		}
 		
-		BlocksHelper.setWithoutUpdate(world, pos, EndBlocks.LACUGROVE.bark);
+		BlocksHelper.setWithoutUpdate(world, pos, EndBlocks.LACUGROVE.getBark());
 	}
 	
 	static {
 		REPLACE = (state) -> {
-			if (state.is(TagAPI.END_GROUND)) {
+			if (state.is(TagAPI.BLOCK_END_GROUND)) {
 				return true;
 			}
 			if (EndBlocks.LACUGROVE.isTreeLog(state)) {
@@ -197,7 +209,7 @@ public class LacugroveFeature extends DefaultFeature {
 		
 		POST = (info) -> {
 			if (EndBlocks.LACUGROVE.isTreeLog(info.getStateUp()) && EndBlocks.LACUGROVE.isTreeLog(info.getStateDown())) {
-				return EndBlocks.LACUGROVE.log.defaultBlockState();
+				return EndBlocks.LACUGROVE.getLog().defaultBlockState();
 			}
 			return info.getState();
 		};

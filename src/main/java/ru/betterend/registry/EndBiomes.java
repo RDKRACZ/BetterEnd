@@ -49,6 +49,7 @@ import ru.betterend.world.biome.land.NeonOasisBiome;
 import ru.betterend.world.biome.land.PaintedMountainsBiome;
 import ru.betterend.world.biome.land.ShadowForestBiome;
 import ru.betterend.world.biome.land.SulphurSpringsBiome;
+import ru.betterend.world.biome.land.UmbraValleyBiome;
 import ru.betterend.world.biome.land.UmbrellaJungleBiome;
 import ru.betterend.world.generator.BiomeType;
 import ru.betterend.world.generator.GeneratorOptions;
@@ -97,6 +98,7 @@ public class EndBiomes {
 	public static final EndBiome DRY_SHRUBLAND = registerBiome(new DryShrublandBiome(), BiomeType.LAND);
 	public static final EndBiome LANTERN_WOODS = registerBiome(new LanternWoodsBiome(), BiomeType.LAND);
 	public static final EndBiome NEON_OASIS = registerSubBiome(new NeonOasisBiome(), DUST_WASTELANDS);
+	public static final EndBiome UMBRA_VALLEY = registerBiome(new UmbraValleyBiome(), BiomeType.LAND);
 	
 	// Better End Void
 	public static final EndBiome ICE_STARFIELD = registerBiome(new BiomeIceStarfield(), BiomeType.VOID);
@@ -133,8 +135,13 @@ public class EndBiomes {
 		biomeRegistry.forEach((biome) -> {
 			if (biome.getBiomeCategory() == BiomeCategory.THEEND) {
 				ResourceLocation id = biomeRegistry.getKey(biome);
-				if (!id.getNamespace().equals("ultra_amplified_dimension") && Configs.BIOME_CONFIG.getBoolean(id, "enabled", true)) {
-					if (!LAND_BIOMES.containsImmutable(id) && !VOID_BIOMES.containsImmutable(id) && !SUBBIOMES_UNMUTABLES.contains(id)) {
+				if (!id.getNamespace().equals("ultra_amplified_dimension") && Configs.BIOME_CONFIG.getBoolean(
+					id,
+					"enabled",
+					true
+				)) {
+					if (!LAND_BIOMES.containsImmutable(id) && !VOID_BIOMES.containsImmutable(id) && !SUBBIOMES_UNMUTABLES
+						.contains(id)) {
 						JsonObject config = configs.get(id.getNamespace());
 						if (config == null) {
 							config = loadJsonConfig(id.getNamespace());
@@ -242,6 +249,7 @@ public class EndBiomes {
 	 */
 	public static EndBiome registerBiome(Biome biome, BiomeType type, float fogDensity, float genChance) {
 		EndBiome endBiome = new EndBiome(BuiltinRegistries.BIOME.getKey(biome), biome, fogDensity, genChance, true);
+		BiomeAPI.registerBiome(endBiome);
 		if (Configs.BIOME_CONFIG.getBoolean(endBiome.getID(), "enabled", true)) {
 			addToPicker(endBiome, type);
 		}
@@ -271,12 +279,12 @@ public class EndBiomes {
 	 */
 	public static EndBiome registerSubBiome(Biome biome, EndBiome parent, float fogDensity, float genChance, boolean hasCaves) {
 		EndBiome endBiome = new EndBiome(BuiltinRegistries.BIOME.getKey(biome), biome, fogDensity, genChance, hasCaves);
+		BiomeAPI.registerBiome(endBiome);
 		if (Configs.BIOME_CONFIG.getBoolean(endBiome.getID(), "enabled", true)) {
 			BiomeAPI.registerBiome(endBiome);
 			parent.addSubBiome(endBiome);
 			SUBBIOMES.add(endBiome);
 			SUBBIOMES_UNMUTABLES.add(endBiome.getID());
-			BiomeAPI.registerBiome(endBiome);
 		}
 		return endBiome;
 	}

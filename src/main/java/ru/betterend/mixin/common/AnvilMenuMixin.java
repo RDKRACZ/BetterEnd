@@ -18,6 +18,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import ru.bclib.blocks.BaseAnvilBlock;
 import ru.betterend.blocks.basis.EndAnvilBlock;
 import ru.betterend.interfaces.AnvilScreenHandlerExtended;
 import ru.betterend.recipe.builders.AnvilRecipe;
@@ -72,14 +73,15 @@ public abstract class AnvilMenuMixin extends ItemCombinerMenu implements AnvilSc
 			slotsChanged(inputSlots);
 			access.execute((world, blockPos) -> {
 				BlockState anvilState = world.getBlockState(blockPos);
+				BaseAnvilBlock anvil = (BaseAnvilBlock) anvilState.getBlock();
 				if (!player.getAbilities().instabuild && anvilState.is(BlockTags.ANVIL) && player.getRandom().nextDouble() < 0.1) {
-					BlockState landingState = EndAnvilBlock.applyDamage(anvilState);
-					if (landingState == null) {
+					BlockState damagedState = anvil.damageAnvilUse(anvilState, player.getRandom());
+					if (damagedState == null) {
 						world.removeBlock(blockPos, false);
 						world.levelEvent(1029, blockPos, 0);
 					}
 					else {
-						world.setBlock(blockPos, landingState, 2);
+						world.setBlock(blockPos, damagedState, 2);
 						world.levelEvent(1030, blockPos, 0);
 					}
 				}
@@ -97,7 +99,9 @@ public abstract class AnvilMenuMixin extends ItemCombinerMenu implements AnvilSc
 		be_recipes = recipeManager.getRecipesFor(AnvilRecipe.TYPE, inputSlots, player.level);
 		if (be_recipes.size() > 0) {
 			int anvilLevel = this.anvilLevel.get();
-			be_recipes = be_recipes.stream().filter(recipe -> anvilLevel >= recipe.getAnvilLevel()).collect(Collectors.toList());
+			be_recipes = be_recipes.stream()
+								   .filter(recipe -> anvilLevel >= recipe.getAnvilLevel())
+								   .collect(Collectors.toList());
 			if (be_recipes.size() > 0) {
 				if (be_currentRecipe == null || !be_recipes.contains(be_currentRecipe)) {
 					be_currentRecipe = be_recipes.get(0);

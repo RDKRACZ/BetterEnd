@@ -45,7 +45,7 @@ public class DragonTreeFeature extends DefaultFeature {
 		final Random random = featureConfig.random();
 		final BlockPos pos = featureConfig.origin();
 		final WorldGenLevel world = featureConfig.level();
-		if (!world.getBlockState(pos.below()).is(TagAPI.END_GROUND)) return false;
+		if (!world.getBlockState(pos.below()).is(TagAPI.BLOCK_END_GROUND)) return false;
 		
 		float size = MHelper.randRange(10, 25, random);
 		List<Vector3f> spline = SplineHelper.makeSpline(0, 0, 0, 0, size, 0, 6);
@@ -66,7 +66,7 @@ public class DragonTreeFeature extends DefaultFeature {
 		
 		radius = MHelper.randRange(1.2F, 2.3F, random);
 		SDF function = SplineHelper.buildSDF(spline, radius, 1.2F, (bpos) -> {
-			return EndBlocks.DRAGON_TREE.bark.defaultBlockState();
+			return EndBlocks.DRAGON_TREE.getBark().defaultBlockState();
 		});
 		
 		function.setReplaceFunction(REPLACE);
@@ -86,17 +86,17 @@ public class DragonTreeFeature extends DefaultFeature {
 			List<Vector3f> branch = SplineHelper.copySpline(BRANCH);
 			SplineHelper.rotateSpline(branch, angle);
 			SplineHelper.scale(branch, scale);
-			SplineHelper.fillSpline(branch, world, EndBlocks.DRAGON_TREE.bark.defaultBlockState(), pos, REPLACE);
+			SplineHelper.fillSpline(branch, world, EndBlocks.DRAGON_TREE.getBark().defaultBlockState(), pos, REPLACE);
 			
 			branch = SplineHelper.copySpline(SIDE1);
 			SplineHelper.rotateSpline(branch, angle);
 			SplineHelper.scale(branch, scale);
-			SplineHelper.fillSpline(branch, world, EndBlocks.DRAGON_TREE.bark.defaultBlockState(), pos, REPLACE);
+			SplineHelper.fillSpline(branch, world, EndBlocks.DRAGON_TREE.getBark().defaultBlockState(), pos, REPLACE);
 			
 			branch = SplineHelper.copySpline(SIDE2);
 			SplineHelper.rotateSpline(branch, angle);
 			SplineHelper.scale(branch, scale);
-			SplineHelper.fillSpline(branch, world, EndBlocks.DRAGON_TREE.bark.defaultBlockState(), pos, REPLACE);
+			SplineHelper.fillSpline(branch, world, EndBlocks.DRAGON_TREE.getBark().defaultBlockState(), pos, REPLACE);
 		}
 		leavesBall(world, pos.above(offset), radius * 1.15F + 2, random, noise);
 	}
@@ -111,14 +111,16 @@ public class DragonTreeFeature extends DefaultFeature {
 			SplineHelper.rotateSpline(branch, angle);
 			SplineHelper.scale(branch, scale);
 			Vector3f last = branch.get(branch.size() - 1);
-			if (world.getBlockState(pos.offset(last.x(), last.y(), last.z())).is(TagAPI.GEN_TERRAIN)) {
-				SplineHelper.fillSpline(branch, world, EndBlocks.DRAGON_TREE.bark.defaultBlockState(), pos, REPLACE);
+			if (world.getBlockState(pos.offset(last.x(), last.y(), last.z())).is(TagAPI.BLOCK_GEN_TERRAIN)) {
+				SplineHelper.fillSpline(branch, world, EndBlocks.DRAGON_TREE.getBark().defaultBlockState(), pos, REPLACE);
 			}
 		}
 	}
 	
 	private void leavesBall(WorldGenLevel world, BlockPos pos, float radius, Random random, OpenSimplexNoise noise) {
-		SDF sphere = new SDFSphere().setRadius(radius).setBlock(EndBlocks.DRAGON_TREE_LEAVES.defaultBlockState().setValue(LeavesBlock.DISTANCE, 6));
+		SDF sphere = new SDFSphere().setRadius(radius)
+									.setBlock(EndBlocks.DRAGON_TREE_LEAVES.defaultBlockState()
+																		  .setValue(LeavesBlock.DISTANCE, 6));
 		SDF sub = new SDFScale().setScale(5).setSource(sphere);
 		sub = new SDFTranslate().setTranslate(0, -radius * 5, 0).setSource(sub);
 		sphere = new SDFSubtraction().setSourceA(sphere).setSourceB(sub);
@@ -138,7 +140,7 @@ public class DragonTreeFeature extends DefaultFeature {
 						return info.getState();
 					}
 				}
-				info.setState(EndBlocks.DRAGON_TREE.bark.defaultBlockState());
+				info.setState(EndBlocks.DRAGON_TREE.getBark().defaultBlockState());
 				for (int x = -6; x < 7; x++) {
 					int ax = Math.abs(x);
 					mut.setX(x + info.getPos().getX());
@@ -169,7 +171,11 @@ public class DragonTreeFeature extends DefaultFeature {
 		if (radius > 5) {
 			int count = (int) (radius * 2.5F);
 			for (int i = 0; i < count; i++) {
-				BlockPos p = pos.offset(random.nextGaussian() * 1, random.nextGaussian() * 1, random.nextGaussian() * 1);
+				BlockPos p = pos.offset(
+					random.nextGaussian() * 1,
+					random.nextGaussian() * 1,
+					random.nextGaussian() * 1
+				);
 				boolean place = true;
 				for (Direction d : Direction.values()) {
 					BlockState state = world.getBlockState(p.relative(d));
@@ -179,17 +185,17 @@ public class DragonTreeFeature extends DefaultFeature {
 					}
 				}
 				if (place) {
-					BlocksHelper.setWithoutUpdate(world, p, EndBlocks.DRAGON_TREE.bark);
+					BlocksHelper.setWithoutUpdate(world, p, EndBlocks.DRAGON_TREE.getBark());
 				}
 			}
 		}
 		
-		BlocksHelper.setWithoutUpdate(world, pos, EndBlocks.DRAGON_TREE.bark);
+		BlocksHelper.setWithoutUpdate(world, pos, EndBlocks.DRAGON_TREE.getBark());
 	}
 	
 	static {
 		REPLACE = (state) -> {
-			if (state.is(TagAPI.END_GROUND)) {
+			if (state.is(TagAPI.BLOCK_END_GROUND)) {
 				return true;
 			}
 			if (state.getBlock() == EndBlocks.DRAGON_TREE_LEAVES) {
@@ -207,12 +213,18 @@ public class DragonTreeFeature extends DefaultFeature {
 		
 		POST = (info) -> {
 			if (EndBlocks.DRAGON_TREE.isTreeLog(info.getStateUp()) && EndBlocks.DRAGON_TREE.isTreeLog(info.getStateDown())) {
-				return EndBlocks.DRAGON_TREE.log.defaultBlockState();
+				return EndBlocks.DRAGON_TREE.getLog().defaultBlockState();
 			}
 			return info.getState();
 		};
 		
-		BRANCH = Lists.newArrayList(new Vector3f(0, 0, 0), new Vector3f(0.1F, 0.3F, 0), new Vector3f(0.4F, 0.6F, 0), new Vector3f(0.8F, 0.8F, 0), new Vector3f(1, 1, 0));
+		BRANCH = Lists.newArrayList(
+			new Vector3f(0, 0, 0),
+			new Vector3f(0.1F, 0.3F, 0),
+			new Vector3f(0.4F, 0.6F, 0),
+			new Vector3f(0.8F, 0.8F, 0),
+			new Vector3f(1, 1, 0)
+		);
 		SIDE1 = Lists.newArrayList(new Vector3f(0.4F, 0.6F, 0), new Vector3f(0.8F, 0.8F, 0), new Vector3f(1, 1, 0));
 		SIDE2 = SplineHelper.copySpline(SIDE1);
 		
@@ -226,7 +238,13 @@ public class DragonTreeFeature extends DefaultFeature {
 		SplineHelper.offset(SIDE1, offset2);
 		SplineHelper.offset(SIDE2, offset2);
 		
-		ROOT = Lists.newArrayList(new Vector3f(0F, 1F, 0), new Vector3f(0.1F, 0.7F, 0), new Vector3f(0.3F, 0.3F, 0), new Vector3f(0.7F, 0.05F, 0), new Vector3f(0.8F, -0.2F, 0));
+		ROOT = Lists.newArrayList(
+			new Vector3f(0F, 1F, 0),
+			new Vector3f(0.1F, 0.7F, 0),
+			new Vector3f(0.3F, 0.3F, 0),
+			new Vector3f(0.7F, 0.05F, 0),
+			new Vector3f(0.8F, -0.2F, 0)
+		);
 		SplineHelper.offset(ROOT, new Vector3f(0, -0.45F, 0));
 	}
 }

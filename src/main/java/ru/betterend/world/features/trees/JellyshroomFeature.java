@@ -36,9 +36,9 @@ public class JellyshroomFeature extends DefaultFeature {
 		final Random random = featureConfig.random();
 		final BlockPos pos = featureConfig.origin();
 		final WorldGenLevel world = featureConfig.level();
-		if (!world.getBlockState(pos.below()).is(TagAPI.END_GROUND)) return false;
+		if (!world.getBlockState(pos.below()).is(TagAPI.BLOCK_END_GROUND)) return false;
 		
-		BlockState bark = EndBlocks.JELLYSHROOM.bark.defaultBlockState();
+		BlockState bark = EndBlocks.JELLYSHROOM.getBark().defaultBlockState();
 		BlockState membrane = EndBlocks.JELLYSHROOM_CAP_PURPLE.defaultBlockState();
 		
 		int height = MHelper.randRange(5, 8, random);
@@ -61,7 +61,7 @@ public class JellyshroomFeature extends DefaultFeature {
 		sdf.setReplaceFunction(REPLACE).addPostProcess((info) -> {
 			if (EndBlocks.JELLYSHROOM.isTreeLog(info.getState())) {
 				if (EndBlocks.JELLYSHROOM.isTreeLog(info.getStateUp()) && EndBlocks.JELLYSHROOM.isTreeLog(info.getStateDown())) {
-					return EndBlocks.JELLYSHROOM.log.defaultBlockState();
+					return EndBlocks.JELLYSHROOM.getLog().defaultBlockState();
 				}
 			}
 			else if (info.getState().is(EndBlocks.JELLYSHROOM_CAP_PURPLE)) {
@@ -89,7 +89,7 @@ public class JellyshroomFeature extends DefaultFeature {
 			SplineHelper.rotateSpline(branch, angle);
 			SplineHelper.scale(branch, scale);
 			Vector3f last = branch.get(branch.size() - 1);
-			if (world.getBlockState(pos.offset(last.x(), last.y(), last.z())).is(TagAPI.GEN_TERRAIN)) {
+			if (world.getBlockState(pos.offset(last.x(), last.y(), last.z())).is(TagAPI.BLOCK_GEN_TERRAIN)) {
 				SplineHelper.fillSpline(branch, world, wood, pos, REPLACE);
 			}
 		}
@@ -113,11 +113,16 @@ public class JellyshroomFeature extends DefaultFeature {
 	}
 	
 	static {
-		ROOT = Lists.newArrayList(new Vector3f(0.1F, 0.70F, 0), new Vector3f(0.3F, 0.30F, 0), new Vector3f(0.7F, 0.05F, 0), new Vector3f(0.8F, -0.20F, 0));
+		ROOT = Lists.newArrayList(
+			new Vector3f(0.1F, 0.70F, 0),
+			new Vector3f(0.3F, 0.30F, 0),
+			new Vector3f(0.7F, 0.05F, 0),
+			new Vector3f(0.8F, -0.20F, 0)
+		);
 		SplineHelper.offset(ROOT, new Vector3f(0, -0.45F, 0));
 		
 		REPLACE = (state) -> {
-			if (state.is(TagAPI.END_GROUND) || state.getMaterial().equals(Material.PLANT)) {
+			if (state.is(TagAPI.BLOCK_END_GROUND) || state.getMaterial().equals(Material.PLANT)) {
 				return true;
 			}
 			return state.getMaterial().isReplaceable();

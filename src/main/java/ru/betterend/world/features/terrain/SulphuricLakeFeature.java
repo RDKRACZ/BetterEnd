@@ -61,7 +61,7 @@ public class SulphuricLakeFeature extends DefaultFeature {
 				int dist = x2 + z2;
 				if (dist <= r) {
 					POS.setY(getYOnSurface(world, x, z) - 1);
-					if (world.getBlockState(POS).is(TagAPI.GEN_TERRAIN)) {
+					if (world.getBlockState(POS).is(TagAPI.BLOCK_GEN_TERRAIN)) {
 						if (isBorder(world, POS)) {
 							if (random.nextInt(8) > 0) {
 								brimstone.add(POS.immutable());
@@ -97,7 +97,7 @@ public class SulphuricLakeFeature extends DefaultFeature {
 							brimstone.remove(POS);
 							for (Direction dir : BlocksHelper.HORIZONTAL) {
 								BlockPos offseted = POS.relative(dir);
-								if (world.getBlockState(offseted).is(TagAPI.GEN_TERRAIN)) {
+								if (world.getBlockState(offseted).is(TagAPI.BLOCK_GEN_TERRAIN)) {
 									brimstone.add(offseted);
 								}
 							}
@@ -106,7 +106,7 @@ public class SulphuricLakeFeature extends DefaultFeature {
 								brimstone.remove(POS);
 								for (Direction dir : BlocksHelper.HORIZONTAL) {
 									BlockPos offseted = POS.relative(dir);
-									if (world.getBlockState(offseted).is(TagAPI.GEN_TERRAIN)) {
+									if (world.getBlockState(offseted).is(TagAPI.BLOCK_GEN_TERRAIN)) {
 										brimstone.add(offseted);
 									}
 								}
@@ -123,7 +123,7 @@ public class SulphuricLakeFeature extends DefaultFeature {
 				}
 				else if (dist < r2) {
 					POS.setY(getYOnSurface(world, x, z) - 1);
-					if (world.getBlockState(POS).is(TagAPI.GEN_TERRAIN)) {
+					if (world.getBlockState(POS).is(TagAPI.BLOCK_GEN_TERRAIN)) {
 						brimstone.add(POS.immutable());
 						if (random.nextBoolean()) {
 							brimstone.add(POS.below());
@@ -166,7 +166,11 @@ public class SulphuricLakeFeature extends DefaultFeature {
 	private boolean isDeepWater(WorldGenLevel world, BlockPos pos) {
 		int y = pos.getY() + 1;
 		for (Direction dir : BlocksHelper.DIRECTIONS) {
-			if (getYOnSurface(world, pos.getX() + dir.getStepX(), pos.getZ() + dir.getStepZ()) < y || getYOnSurface(world, pos.getX() + dir.getStepX() * 2, pos.getZ() + dir.getStepZ() * 2) < y || getYOnSurface(world, pos.getX() + dir.getStepX() * 3, pos.getZ() + dir.getStepZ() * 3) < y) {
+			if (getYOnSurface(world, pos.getX() + dir.getStepX(), pos.getZ() + dir.getStepZ()) < y || getYOnSurface(
+				world,
+				pos.getX() + dir.getStepX() * 2,
+				pos.getZ() + dir.getStepZ() * 2
+			) < y || getYOnSurface(world, pos.getX() + dir.getStepX() * 3, pos.getZ() + dir.getStepZ() * 3) < y) {
 				return false;
 			}
 		}
@@ -194,7 +198,10 @@ public class SulphuricLakeFeature extends DefaultFeature {
 		for (Direction dir : BlocksHelper.DIRECTIONS) {
 			BlockPos side;
 			if (random.nextInt(16) == 0 && world.getBlockState((side = pos.relative(dir))).is(Blocks.WATER)) {
-				BlockState state = EndBlocks.SULPHUR_CRYSTAL.defaultBlockState().setValue(SulphurCrystalBlock.WATERLOGGED, true).setValue(SulphurCrystalBlock.FACING, dir).setValue(SulphurCrystalBlock.AGE, random.nextInt(3));
+				BlockState state = EndBlocks.SULPHUR_CRYSTAL.defaultBlockState()
+															.setValue(SulphurCrystalBlock.WATERLOGGED, true)
+															.setValue(SulphurCrystalBlock.FACING, dir)
+															.setValue(SulphurCrystalBlock.AGE, random.nextInt(3));
 				BlocksHelper.setWithoutUpdate(world, side, state);
 			}
 		}

@@ -9,7 +9,6 @@ import com.mojang.math.Vector3f;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
-import net.fabricmc.fabric.mixin.object.builder.AbstractBlockAccessor;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.model.BlockModel;
@@ -45,8 +44,8 @@ import ru.bclib.client.models.ModelsHelper;
 import ru.bclib.client.models.ModelsHelper.MultiPartBuilder;
 import ru.bclib.client.models.PatternsHelper;
 import ru.bclib.client.render.BCLRenderLayer;
-import ru.bclib.interfaces.IPostInit;
-import ru.bclib.interfaces.IRenderTyped;
+import ru.bclib.interfaces.PostInitable;
+import ru.bclib.interfaces.RenderLayerProvider;
 import ru.bclib.util.BlocksHelper;
 import ru.bclib.util.JsonFactory;
 import ru.betterend.BetterEnd;
@@ -58,12 +57,11 @@ import ru.betterend.interfaces.PottableTerrain;
 import ru.betterend.registry.EndBlocks;
 
 import java.io.File;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-public class FlowerPotBlock extends BaseBlockNotFull implements IRenderTyped, IPostInit {
+public class FlowerPotBlock extends BaseBlockNotFull implements RenderLayerProvider, PostInitable {
 	private static final IntegerProperty PLANT_ID = EndBlockProperties.PLANT_ID;
 	private static final IntegerProperty SOIL_ID = EndBlockProperties.SOIL_ID;
 	private static final IntegerProperty POT_LIGHT = EndBlockProperties.POT_LIGHT;
@@ -74,7 +72,12 @@ public class FlowerPotBlock extends BaseBlockNotFull implements IRenderTyped, IP
 	
 	public FlowerPotBlock(Block source) {
 		super(FabricBlockSettings.copyOf(source).luminance(state -> state.getValue(POT_LIGHT) * 5));
-		this.registerDefaultState(this.defaultBlockState().setValue(PLANT_ID, 0).setValue(SOIL_ID, 0).setValue(POT_LIGHT, 0));
+		this.registerDefaultState(
+			this.defaultBlockState()
+			.setValue(PLANT_ID, 0)
+			.setValue(SOIL_ID, 0)
+			.setValue(POT_LIGHT, 0)
+		);
 	}
 	
 	@Override
@@ -122,7 +125,10 @@ public class FlowerPotBlock extends BaseBlockNotFull implements IRenderTyped, IP
 		Map<String, Integer> reservedPlantsIDs = Maps.newHashMap();
 		Map<String, Integer> reservedSoilIDs = Maps.newHashMap();
 		
-		JsonObject obj = JsonFactory.getJsonObject(new File(FabricLoader.getInstance().getConfigDir().toFile(), BetterEnd.MOD_ID + "/blocks.json"));
+		JsonObject obj = JsonFactory.getJsonObject(new File(
+			FabricLoader.getInstance().getConfigDir().toFile(),
+			BetterEnd.MOD_ID + "/blocks.json"
+		));
 		if (obj.get("flower_pots") != null) {
 			JsonElement plantsObj = obj.get("flower_pots").getAsJsonObject().get("plants");
 			JsonElement soilsObj = obj.get("flower_pots").getAsJsonObject().get("soils");
@@ -141,10 +147,10 @@ public class FlowerPotBlock extends BaseBlockNotFull implements IRenderTyped, IP
 		}
 		
 		EndBlocks.getModBlocks().forEach(block -> {
-			if (block instanceof PottablePlant && ((PottablePlant) block).addToPot()) {//&& canBeAdded(block)) {
+			if (block instanceof PottablePlant && ((PottablePlant) block).canBePotted()) {
 				processBlock(plants, block, "flower_pots.plants", reservedPlantsIDs);
 			}
-			else if (block instanceof PottableTerrain) {
+			else if (block instanceof PottableTerrain && ((PottableTerrain) block).canBePotted()) {
 				processBlock(soils, block, "flower_pots.soils", reservedSoilIDs);
 			}
 		});
@@ -206,6 +212,19 @@ public class FlowerPotBlock extends BaseBlockNotFull implements IRenderTyped, IP
 			for (int i = 0; i < soils.length; i++) {
 				if (block == soils[i]) {
 					BlocksHelper.setWithUpdate(level, pos, state.setValue(SOIL_ID, i + 1));
+					if (!player.isCreative()) {
+						itemStack.shrink(1);
+					}
+					level.playSound(
+						player,
+						pos.getX() + 0.5,
+						pos.getY() + 0.5,
+						pos.getZ() + 0.5,
+						SoundEvents.SOUL_SOIL_PLACE,
+						SoundSource.BLOCKS,
+						1,
+						1
+					);
 					return InteractionResult.SUCCESS;
 				}
 			}
@@ -236,7 +255,19 @@ public class FlowerPotBlock extends BaseBlockNotFull implements IRenderTyped, IP
 				}
 				int light = plants[i].defaultBlockState().getLightEmission() / 5;
 				BlocksHelper.setWithUpdate(level, pos, state.setValue(PLANT_ID, i + 1).setValue(POT_LIGHT, light));
-				level.playLocalSound(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, SoundEvents.HOE_TILL, SoundSource.BLOCKS, 1, 1, false);
+				level.playSound(
+					player,
+					pos.getX() + 0.5,
+					pos.getY() + 0.5,
+					pos.getZ() + 0.5,
+					SoundEvents.HOE_TILL,
+					SoundSource.BLOCKS,
+					1,
+					1
+				);
+				if (!player.isCreative()) {
+					itemStack.shrink(1);
+				}
 				return InteractionResult.SUCCESS;
 			}
 		}
@@ -264,11 +295,17 @@ public class FlowerPotBlock extends BaseBlockNotFull implements IRenderTyped, IP
 			
 			final int compareID = i + 1;
 			ResourceLocation modelPath = Registry.BLOCK.getKey(plants[i]);
-			ResourceLocation objSource = new ResourceLocation(modelPath.getNamespace(), "models/block/" + modelPath.getPath() + "_potted.json");
+			ResourceLocation objSource = new ResourceLocation(
+				modelPath.getNamespace(),
+				"models/block/" + modelPath.getPath() + "_potted.json"
+			);
 			
 			if (Minecraft.getInstance().getResourceManager().hasResource(objSource)) {
 				objSource = new ResourceLocation(modelPath.getNamespace(), "block/" + modelPath.getPath() + "_potted");
-				model.part(objSource).setTransformation(offset).setCondition(state -> state.getValue(PLANT_ID) == compareID).add();
+				model.part(objSource)
+					 .setTransformation(offset)
+					 .setCondition(state -> state.getValue(PLANT_ID) == compareID)
+					 .add();
 				continue;
 			}
 			
@@ -281,7 +318,10 @@ public class FlowerPotBlock extends BaseBlockNotFull implements IRenderTyped, IP
 				Optional<String> pattern = Patterns.createJson(BasePatterns.BLOCK_CROSS, textures);
 				UnbakedModel unbakedModel = ModelsHelper.fromPattern(pattern);
 				modelCache.put(modelPath, unbakedModel);
-				model.part(modelPath).setTransformation(offset).setCondition(state -> state.getValue(PLANT_ID) == compareID).add();
+				model.part(modelPath)
+					 .setTransformation(offset)
+					 .setCondition(state -> state.getValue(PLANT_ID) == compareID)
+					 .add();
 				continue;
 			}
 			else if (plants[i] instanceof PottableLeavesBlock) {
@@ -293,7 +333,10 @@ public class FlowerPotBlock extends BaseBlockNotFull implements IRenderTyped, IP
 				Optional<String> pattern = Patterns.createJson(Patterns.BLOCK_POTTED_LEAVES, textures);
 				UnbakedModel unbakedModel = ModelsHelper.fromPattern(pattern);
 				modelCache.put(modelPath, unbakedModel);
-				model.part(modelPath).setTransformation(offset).setCondition(state -> state.getValue(PLANT_ID) == compareID).add();
+				model.part(modelPath)
+					 .setTransformation(offset)
+					 .setCondition(state -> state.getValue(PLANT_ID) == compareID)
+					 .add();
 				continue;
 			}
 			
@@ -332,15 +375,24 @@ public class FlowerPotBlock extends BaseBlockNotFull implements IRenderTyped, IP
 					continue;
 				}
 				
-				model.part(new ResourceLocation(path)).setTransformation(offset).setCondition(state -> state.getValue(PLANT_ID) == compareID).add();
+				model.part(new ResourceLocation(path))
+					 .setTransformation(offset)
+					 .setCondition(state -> state.getValue(PLANT_ID) == compareID)
+					 .add();
 			}
 			else {
-				for (ResourceLocation location: modelCache.keySet()) {
-					if (location.getPath().equals(modelPath.getPath())) {
-						model.part(location).setTransformation(offset).setCondition(state -> state.getValue(PLANT_ID) == compareID).add();
-						break;
-					}
-				}
+				ResourceLocation loc = Registry.BLOCK.getKey(plants[i]);
+				modelPath = new ResourceLocation(loc.getNamespace(), "block/" + loc.getPath() + "_potted");
+				Map<String, String> textures = Maps.newHashMap();
+				textures.put("%modid%", loc.getNamespace());
+				textures.put("%texture%", loc.getPath());
+				Optional<String> pattern = Patterns.createJson(BasePatterns.BLOCK_CROSS, textures);
+				UnbakedModel unbakedModel = ModelsHelper.fromPattern(pattern);
+				modelCache.put(modelPath, unbakedModel);
+				model.part(modelPath)
+					 .setTransformation(offset)
+					 .setCondition(state -> state.getValue(PLANT_ID) == compareID)
+					 .add();
 			}
 		}
 		

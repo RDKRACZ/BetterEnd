@@ -11,7 +11,6 @@ import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.math.Matrix4f;
 import com.mojang.math.Quaternion;
 import com.mojang.math.Vector3f;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.DimensionSpecialEffects;
@@ -21,7 +20,6 @@ import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.RenderBuffers;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.resources.ResourceLocation;
-import org.lwjgl.opengl.GL11;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -60,7 +58,6 @@ public class LevelRendererMixin {
 	private static float time3;
 	private static float blind02;
 	private static float blind06;
-	private static boolean directOpenGL = false;
 	
 	@Shadow
 	@Final
@@ -88,8 +85,6 @@ public class LevelRendererMixin {
 		axis2.normalize();
 		axis3.normalize();
 		axis4.normalize();
-		
-		directOpenGL = FabricLoader.getInstance().isModLoaded("optifabric") || FabricLoader.getInstance().isModLoaded("immersive_portals");
 	}
 	
 	@Inject(method = "renderSky", at = @At("HEAD"), cancellable = true)
@@ -102,18 +97,14 @@ public class LevelRendererMixin {
 			time3 = time * 3;
 			
 			FogRenderer.levelFogColor();
+			RenderSystem.depthMask(false);
 			RenderSystem.enableTexture();
-			
-			if (directOpenGL) {
-				GL11.glEnable(GL11.GL_ALPHA_TEST);
-				GL11.glAlphaFunc(516, 0.0F);
-				GL11.glEnable(GL11.GL_BLEND);
-				RenderSystem.depthMask(false);
-			}
-			else {
-				RenderSystem.enableBlend();
-				RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
-			}
+			RenderSystem.enableBlend();
+			RenderSystem.setShaderColor(1,1,1,1);
+			RenderSystem.blendFunc(
+				GlStateManager.SourceFactor.SRC_ALPHA,
+				GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA
+			);
 			
 			float blindA = 1F - BackgroundInfo.blindness;
 			blind02 = blindA * 0.2F;
@@ -123,26 +114,62 @@ public class LevelRendererMixin {
 				matrices.pushPose();
 				matrices.mulPose(new Quaternion(0, time, 0, false));
 				RenderSystem.setShaderTexture(0, HORIZON);
-				be_renderBuffer(matrices, matrix4f, horizon, DefaultVertexFormat.POSITION_TEX, 0.77F, 0.31F, 0.73F, 0.7F * blindA);
+				be_renderBuffer(
+					matrices,
+					matrix4f,
+					horizon,
+					DefaultVertexFormat.POSITION_TEX,
+					0.77F,
+					0.31F,
+					0.73F,
+					0.7F * blindA
+				);
 				matrices.popPose();
 				
 				matrices.pushPose();
 				matrices.mulPose(new Quaternion(0, -time, 0, false));
 				RenderSystem.setShaderTexture(0, NEBULA_1);
-				be_renderBuffer(matrices, matrix4f, nebulas1, DefaultVertexFormat.POSITION_TEX, 0.77F, 0.31F, 0.73F, blind02);
+				be_renderBuffer(
+					matrices,
+					matrix4f,
+					nebulas1,
+					DefaultVertexFormat.POSITION_TEX,
+					0.77F,
+					0.31F,
+					0.73F,
+					blind02
+				);
 				matrices.popPose();
 				
 				matrices.pushPose();
 				matrices.mulPose(new Quaternion(0, time2, 0, false));
 				RenderSystem.setShaderTexture(0, NEBULA_2);
-				be_renderBuffer(matrices, matrix4f, nebulas2, DefaultVertexFormat.POSITION_TEX, 0.77F, 0.31F, 0.73F, blind02);
+				be_renderBuffer(
+					matrices,
+					matrix4f,
+					nebulas2,
+					DefaultVertexFormat.POSITION_TEX,
+					0.77F,
+					0.31F,
+					0.73F,
+					blind02
+				);
 				matrices.popPose();
 				
 				RenderSystem.setShaderTexture(0, STARS);
 				
 				matrices.pushPose();
 				matrices.mulPose(axis3.rotation(time));
-				be_renderBuffer(matrices, matrix4f, stars3, DefaultVertexFormat.POSITION_TEX, 0.77F, 0.31F, 0.73F, blind06);
+				be_renderBuffer(
+					matrices,
+					matrix4f,
+					stars3,
+					DefaultVertexFormat.POSITION_TEX,
+					0.77F,
+					0.31F,
+					0.73F,
+					blind06
+				);
 				matrices.popPose();
 				
 				matrices.pushPose();
@@ -155,7 +182,16 @@ public class LevelRendererMixin {
 			if (a > 0) {
 				if (a > 1) a = 1;
 				RenderSystem.setShaderTexture(0, FOG);
-				be_renderBuffer(matrices, matrix4f, fog, DefaultVertexFormat.POSITION_TEX, BackgroundInfo.fogColorRed, BackgroundInfo.fogColorGreen, BackgroundInfo.fogColorBlue, a);
+				be_renderBuffer(
+					matrices,
+					matrix4f,
+					fog,
+					DefaultVertexFormat.POSITION_TEX,
+					BackgroundInfo.fogColorRed,
+					BackgroundInfo.fogColorGreen,
+					BackgroundInfo.fogColorBlue,
+					a
+				);
 			}
 			
 			RenderSystem.disableTexture();

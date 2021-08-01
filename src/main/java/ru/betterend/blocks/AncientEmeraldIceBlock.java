@@ -4,9 +4,11 @@ import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.Enchantments;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.loot.LootContext;
@@ -54,7 +56,17 @@ public class AncientEmeraldIceBlock extends BaseBlock {
 	}
 	
 	private void makeParticles(ServerLevel world, BlockPos pos, Random random) {
-		world.sendParticles(EndParticles.SNOWFLAKE, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, 20, 0.5, 0.5, 0.5, 0);
+		world.sendParticles(
+			EndParticles.SNOWFLAKE,
+			pos.getX() + 0.5,
+			pos.getY() + 0.5,
+			pos.getZ() + 0.5,
+			20,
+			0.5,
+			0.5,
+			0.5,
+			0
+		);
 	}
 	
 	@Override
@@ -66,5 +78,11 @@ public class AncientEmeraldIceBlock extends BaseBlock {
 		else {
 			return Collections.emptyList();
 		}
+	}
+	
+	@Override
+	public void stepOn(Level level, BlockPos blockPos, BlockState blockState, Entity entity) {
+		super.stepOn(level, blockPos, blockState, entity);
+		entity.setIsInPowderSnow(true);
 	}
 }

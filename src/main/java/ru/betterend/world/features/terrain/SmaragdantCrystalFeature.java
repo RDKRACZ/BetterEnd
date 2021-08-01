@@ -21,7 +21,7 @@ public class SmaragdantCrystalFeature extends DefaultFeature {
 		final Random random = featureConfig.random();
 		final BlockPos pos = featureConfig.origin();
 		final WorldGenLevel world = featureConfig.level();
-		if (!world.getBlockState(pos.below()).is(TagAPI.GEN_TERRAIN)) {
+		if (!world.getBlockState(pos.below()).is(TagAPI.BLOCK_GEN_TERRAIN)) {
 			return false;
 		}
 		
@@ -30,21 +30,29 @@ public class SmaragdantCrystalFeature extends DefaultFeature {
 		BlockState crystal = EndBlocks.SMARAGDANT_CRYSTAL.defaultBlockState();
 		BlockState shard = EndBlocks.SMARAGDANT_CRYSTAL_SHARD.defaultBlockState();
 		for (int i = 0; i < count; i++) {
-			mut.set(pos).move(MHelper.floor(random.nextGaussian() * 2 + 0.5), 5, MHelper.floor(random.nextGaussian() * 2 + 0.5));
-			int dist = MHelper.floor(1.5F - MHelper.length(mut.getX() - pos.getX(), mut.getZ() - pos.getZ())) + random.nextInt(3);
+			mut.set(pos)
+			   .move(MHelper.floor(random.nextGaussian() * 2 + 0.5), 5, MHelper.floor(random.nextGaussian() * 2 + 0.5));
+			int dist = MHelper.floor(1.5F - MHelper.length(
+				mut.getX() - pos.getX(),
+				mut.getZ() - pos.getZ()
+			)) + random.nextInt(3);
 			if (dist > 0) {
 				BlockState state = world.getBlockState(mut);
 				for (int n = 0; n < 10 && state.isAir(); n++) {
 					mut.setY(mut.getY() - 1);
 					state = world.getBlockState(mut);
 				}
-				if (state.is(TagAPI.GEN_TERRAIN) && !world.getBlockState(mut.above()).is(crystal.getBlock())) {
+				if (state.is(TagAPI.BLOCK_GEN_TERRAIN) && !world.getBlockState(mut.above()).is(crystal.getBlock())) {
 					for (int j = 0; j <= dist; j++) {
 						BlocksHelper.setWithoutUpdate(world, mut, crystal);
 						mut.setY(mut.getY() + 1);
 					}
 					boolean waterlogged = !world.getFluidState(mut).isEmpty();
-					BlocksHelper.setWithoutUpdate(world, mut, shard.setValue(BlockStateProperties.WATERLOGGED, waterlogged));
+					BlocksHelper.setWithoutUpdate(
+						world,
+						mut,
+						shard.setValue(BlockStateProperties.WATERLOGGED, waterlogged)
+					);
 				}
 			}
 		}

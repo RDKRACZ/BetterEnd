@@ -46,7 +46,7 @@ public class LucerniaFeature extends DefaultFeature {
 		final BlockPos pos = featureConfig.origin();
 		final WorldGenLevel world = featureConfig.level();
 		final NoneFeatureConfiguration config = featureConfig.config();
-		if (!world.getBlockState(pos.below()).is(TagAPI.END_GROUND)) return false;
+		if (!world.getBlockState(pos.below()).is(TagAPI.BLOCK_END_GROUND)) return false;
 		
 		float size = MHelper.randRange(12, 20, random);
 		int count = (int) (size * 0.3F);
@@ -58,7 +58,7 @@ public class LucerniaFeature extends DefaultFeature {
 			SplineHelper.rotateSpline(spline, angle);
 			SplineHelper.scale(spline, size * MHelper.randRange(0.5F, 1F, random));
 			SplineHelper.offsetParts(spline, random, 1F, 0, 1F);
-			SplineHelper.fillSpline(spline, world, EndBlocks.LUCERNIA.bark.defaultBlockState(), pos, REPLACE);
+			SplineHelper.fillSpline(spline, world, EndBlocks.LUCERNIA.getBark().defaultBlockState(), pos, REPLACE);
 			Vector3f last = spline.get(spline.size() - 1);
 			float leavesRadius = (size * 0.13F + MHelper.randRange(0.8F, 1.5F, random)) * 1.4F;
 			OpenSimplexNoise noise = new OpenSimplexNoise(random.nextLong());
@@ -71,27 +71,35 @@ public class LucerniaFeature extends DefaultFeature {
 	}
 	
 	private void leavesBall(WorldGenLevel world, BlockPos pos, float radius, Random random, OpenSimplexNoise noise, boolean natural) {
-		SDF sphere = new SDFSphere().setRadius(radius).setBlock(EndBlocks.LUCERNIA_LEAVES.defaultBlockState().setValue(LeavesBlock.DISTANCE, 6));
+		SDF sphere = new SDFSphere().setRadius(radius)
+									.setBlock(EndBlocks.LUCERNIA_LEAVES.defaultBlockState()
+																	   .setValue(LeavesBlock.DISTANCE, 6));
 		SDF sub = new SDFScale().setScale(5).setSource(sphere);
 		sub = new SDFTranslate().setTranslate(0, -radius * 5, 0).setSource(sub);
 		sphere = new SDFSubtraction().setSourceA(sphere).setSourceB(sub);
 		sphere = new SDFScale3D().setScale(1, 0.75F, 1).setSource(sphere);
-		sphere = new SDFDisplacement().setFunction((vec) -> (float) noise.eval(vec.x() * 0.2, vec.y() * 0.2, vec.z() * 0.2) * 2F).setSource(sphere);
+		sphere = new SDFDisplacement().setFunction((vec) -> (float) noise.eval(
+			vec.x() * 0.2,
+			vec.y() * 0.2,
+			vec.z() * 0.2
+		) * 2F).setSource(sphere);
 		sphere = new SDFDisplacement().setFunction((vec) -> MHelper.randRange(-1.5F, 1.5F, random)).setSource(sphere);
 		
 		MutableBlockPos mut = new MutableBlockPos();
 		for (Direction d1 : BlocksHelper.HORIZONTAL) {
 			BlockPos p = mut.set(pos).move(Direction.UP).move(d1).immutable();
-			BlocksHelper.setWithoutUpdate(world, p, EndBlocks.LUCERNIA.bark.defaultBlockState());
+			BlocksHelper.setWithoutUpdate(world, p, EndBlocks.LUCERNIA.getBark().defaultBlockState());
 			for (Direction d2 : BlocksHelper.HORIZONTAL) {
 				mut.set(p).move(Direction.UP).move(d2);
-				BlocksHelper.setWithoutUpdate(world, p, EndBlocks.LUCERNIA.bark.defaultBlockState());
+				BlocksHelper.setWithoutUpdate(world, p, EndBlocks.LUCERNIA.getBark().defaultBlockState());
 			}
 		}
 		
 		BlockState top = EndBlocks.FILALUX.defaultBlockState().setValue(BlockProperties.TRIPLE_SHAPE, TripleShape.TOP);
-		BlockState middle = EndBlocks.FILALUX.defaultBlockState().setValue(BlockProperties.TRIPLE_SHAPE, TripleShape.MIDDLE);
-		BlockState bottom = EndBlocks.FILALUX.defaultBlockState().setValue(BlockProperties.TRIPLE_SHAPE, TripleShape.BOTTOM);
+		BlockState middle = EndBlocks.FILALUX.defaultBlockState()
+											 .setValue(BlockProperties.TRIPLE_SHAPE, TripleShape.MIDDLE);
+		BlockState bottom = EndBlocks.FILALUX.defaultBlockState()
+											 .setValue(BlockProperties.TRIPLE_SHAPE, TripleShape.BOTTOM);
 		BlockState outer = EndBlocks.LUCERNIA_OUTER_LEAVES.defaultBlockState();
 		
 		List<BlockPos> support = Lists.newArrayList();
@@ -107,7 +115,7 @@ public class LucerniaFeature extends DefaultFeature {
 						return info.getState();
 					}
 				}
-				info.setState(EndBlocks.LUCERNIA.bark.defaultBlockState());
+				info.setState(EndBlocks.LUCERNIA.getBark().defaultBlockState());
 			}
 			
 			MHelper.shuffle(DIRECTIONS, random);
@@ -144,7 +152,7 @@ public class LucerniaFeature extends DefaultFeature {
 			return info.getState();
 		});
 		sphere.fillRecursiveIgnore(world, pos, IGNORE);
-		BlocksHelper.setWithoutUpdate(world, pos, EndBlocks.LUCERNIA.bark);
+		BlocksHelper.setWithoutUpdate(world, pos, EndBlocks.LUCERNIA.getBark());
 		
 		support.forEach((bpos) -> {
 			BlockState state = world.getBlockState(bpos);
@@ -178,15 +186,15 @@ public class LucerniaFeature extends DefaultFeature {
 			SplineHelper.rotateSpline(branch, angle);
 			SplineHelper.scale(branch, scale);
 			Vector3f last = branch.get(branch.size() - 1);
-			if (world.getBlockState(pos.offset(last.x(), last.y(), last.z())).is(TagAPI.GEN_TERRAIN)) {
-				SplineHelper.fillSplineForce(branch, world, EndBlocks.LUCERNIA.bark.defaultBlockState(), pos, REPLACE);
+			if (world.getBlockState(pos.offset(last.x(), last.y(), last.z())).is(TagAPI.BLOCK_GEN_TERRAIN)) {
+				SplineHelper.fillSplineForce(branch, world, EndBlocks.LUCERNIA.getBark().defaultBlockState(), pos, REPLACE);
 			}
 		}
 	}
 	
 	static {
 		REPLACE = (state) -> {
-			if (state.is(TagAPI.END_GROUND)) {
+			if (state.is(TagAPI.BLOCK_END_GROUND)) {
 				return true;
 			}
 			if (state.getBlock() == EndBlocks.LUCERNIA_LEAVES) {
@@ -200,9 +208,21 @@ public class LucerniaFeature extends DefaultFeature {
 		
 		IGNORE = EndBlocks.LUCERNIA::isTreeLog;
 		
-		SPLINE = Lists.newArrayList(new Vector3f(0.00F, 0.00F, 0.00F), new Vector3f(0.10F, 0.35F, 0.00F), new Vector3f(0.20F, 0.50F, 0.00F), new Vector3f(0.30F, 0.55F, 0.00F), new Vector3f(0.42F, 0.70F, 0.00F), new Vector3f(0.50F, 1.00F, 0.00F));
+		SPLINE = Lists.newArrayList(
+			new Vector3f(0.00F, 0.00F, 0.00F),
+			new Vector3f(0.10F, 0.35F, 0.00F),
+			new Vector3f(0.20F, 0.50F, 0.00F),
+			new Vector3f(0.30F, 0.55F, 0.00F),
+			new Vector3f(0.42F, 0.70F, 0.00F),
+			new Vector3f(0.50F, 1.00F, 0.00F)
+		);
 		
-		ROOT = Lists.newArrayList(new Vector3f(0.1F, 0.70F, 0), new Vector3f(0.3F, 0.30F, 0), new Vector3f(0.7F, 0.05F, 0), new Vector3f(0.8F, -0.20F, 0));
+		ROOT = Lists.newArrayList(
+			new Vector3f(0.1F, 0.70F, 0),
+			new Vector3f(0.3F, 0.30F, 0),
+			new Vector3f(0.7F, 0.05F, 0),
+			new Vector3f(0.8F, -0.20F, 0)
+		);
 		SplineHelper.offset(ROOT, new Vector3f(0, -0.45F, 0));
 	}
 }

@@ -65,16 +65,19 @@ public abstract class EndCaveFeature extends DefaultFeature {
 				caveBlocks.parallelStream().forEach((bpos) -> {
 					if (world.getBlockState(bpos).getMaterial().isReplaceable()) {
 						BlockPos side = bpos.below();
-						if (world.getBlockState(side).is(TagAPI.GEN_TERRAIN)) {
+						if (world.getBlockState(side).is(TagAPI.BLOCK_GEN_TERRAIN)) {
 							floorPositions.add(side);
 						}
 						side = bpos.above();
-						if (world.getBlockState(side).is(TagAPI.GEN_TERRAIN)) {
+						if (world.getBlockState(side).is(TagAPI.BLOCK_GEN_TERRAIN)) {
 							ceilPositions.add(side);
 						}
 					}
 				});
-				BlockState surfaceBlock = biome.getBiome().getGenerationSettings().getSurfaceBuilderConfig().getTopMaterial();
+				BlockState surfaceBlock = biome.getBiome()
+											   .getGenerationSettings()
+											   .getSurfaceBuilderConfig()
+											   .getTopMaterial();
 				placeFloor(world, biome, floorPositions, random, surfaceBlock);
 				placeCeil(world, biome, ceilPositions, random);
 				placeWalls(world, biome, caveBlocks, random);
@@ -126,7 +129,8 @@ public abstract class EndCaveFeature extends DefaultFeature {
 				if (wallBlock != null) {
 					for (Vec3i offset : SPHERE) {
 						BlockPos wallPos = pos.offset(offset);
-						if (!positions.contains(wallPos) && !placed.contains(wallPos) && world.getBlockState(wallPos).is(TagAPI.GEN_TERRAIN)) {
+						if (!positions.contains(wallPos) && !placed.contains(wallPos) && world.getBlockState(wallPos)
+																							  .is(TagAPI.BLOCK_GEN_TERRAIN)) {
 							wallBlock = biome.getWall(wallPos);
 							BlocksHelper.setWithoutUpdate(world, wallPos, wallBlock);
 							placed.add(wallPos);
@@ -166,7 +170,7 @@ public abstract class EndCaveFeature extends DefaultFeature {
 		bpos.setY(top - 1);
 		
 		BlockState state = world.getBlockState(bpos);
-		while (!state.is(TagAPI.GEN_TERRAIN) && bpos.getY() > 5) {
+		while (!state.is(TagAPI.BLOCK_GEN_TERRAIN) && bpos.getY() > 5) {
 			bpos.setY(bpos.getY() - 1);
 			state = world.getBlockState(bpos);
 		}
@@ -175,7 +179,7 @@ public abstract class EndCaveFeature extends DefaultFeature {
 		}
 		top = (int) (bpos.getY() - (radius * 1.3F + 5));
 		
-		while (state.is(TagAPI.GEN_TERRAIN) || !state.getFluidState().isEmpty() && bpos.getY() > 5) {
+		while (state.is(TagAPI.BLOCK_GEN_TERRAIN) || !state.getFluidState().isEmpty() && bpos.getY() > 5) {
 			bpos.setY(bpos.getY() - 1);
 			state = world.getBlockState(bpos);
 		}
@@ -256,6 +260,6 @@ public abstract class EndCaveFeature extends DefaultFeature {
 				}
 			}
 		}
-		SPHERE = prePos.toArray(new Vec3i[]{});
+		SPHERE = prePos.toArray(new Vec3i[] {});
 	}
 }

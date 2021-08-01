@@ -60,6 +60,7 @@ public class BetterEnd implements ModInitializer {
 		LootTableUtil.init();
 		FabricLoader.getInstance().getEntrypoints("betterend", BetterEndPlugin.class).forEach(BetterEndPlugin::register);
 		Integrations.init();
+		DataFixer.register();
 		Configs.saveConfigs();
 	}
 	

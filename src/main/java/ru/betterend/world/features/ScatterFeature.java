@@ -32,7 +32,7 @@ public abstract class ScatterFeature extends DefaultFeature {
 		if (pos.getY() < 5) {
 			return false;
 		}
-		else if (!world.getBlockState(pos.below()).is(TagAPI.END_GROUND)) {
+		else if (!world.getBlockState(pos.below()).is(TagAPI.BLOCK_END_GROUND)) {
 			return false;
 		}
 		return true;
@@ -75,7 +75,13 @@ public abstract class ScatterFeature extends DefaultFeature {
 			float z = pr * (float) Math.sin(theta);
 			
 			POS.set(center.getX() + x, center.getY() + getYOffset(), center.getZ() + z);
-			if (getGroundPlant(world, POS) && canGenerate(world, random, center, POS, r) && (getChance() < 2 || random.nextInt(getChance()) == 0)) {
+			if (getGroundPlant(world, POS) && canGenerate(
+				world,
+				random,
+				center,
+				POS,
+				r
+			) && (getChance() < 2 || random.nextInt(getChance()) == 0)) {
 				generate(world, random, POS);
 			}
 		}
