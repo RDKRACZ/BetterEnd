@@ -2,9 +2,9 @@
 name: Build
 on:
   push:
-    branches: [ ]
-  pull_request:
     branches-ignore: [ dependabot/** ]
+  pull_request:
+    branches: [ ]
 jobs:
   build:
     name: Commit ${{ github.sha }}
