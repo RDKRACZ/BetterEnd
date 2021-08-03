@@ -2,7 +2,7 @@ name: Gradle Wrapper updates checker
 on:
   schedule:
   #  - cron: "0 00 * * *"
-    - cron: "0-59/10"
+    - cron: "0-59/10 * *"
 jobs:
   update-gradle-wrapper:
     runs-on: ubuntu-latest
