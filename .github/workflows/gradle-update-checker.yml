@@ -7,7 +7,7 @@ jobs:
   update-gradle-wrapper:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v2.4.0
       - name: Check for Gradle Wrapper updates
         uses: gradle-update/update-gradle-wrapper-action@v1.0.14
       - name: Check for Gradle Wrapper updates 2
