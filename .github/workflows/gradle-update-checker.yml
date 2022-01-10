@@ -11,4 +11,4 @@ jobs:
       - name: Check for Gradle Wrapper updates
         uses: gradle-update/update-gradle-wrapper-action@v1.0.14
       - name: Check for Gradle Wrapper updates 2
-        uses: MeilCli/gradle-update-check-action@v3.4.6
+        uses: MeilCli/gradle-update-check-action@v3.4.8
